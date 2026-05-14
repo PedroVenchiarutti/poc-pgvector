@@ -9,6 +9,8 @@
     "start": "node dist/server.js",
     "seed": "tsx prisma/seed.ts",
     "db:push": "prisma db push",
+    "db:index": "tsx prisma/create-index.ts",
+    "db:setup": "prisma db push --skip-generate && tsx prisma/create-index.ts",
     "db:generate": "prisma generate"
   },
   "dependencies": {

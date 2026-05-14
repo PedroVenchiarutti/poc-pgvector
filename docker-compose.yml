@@ -37,7 +37,7 @@ services:
       - ./api:/app
       - /app/node_modules
       - model-cache:/app/.cache/models
-    command: sh -c "npx prisma db push --skip-generate && npm run dev"
+    command: sh -c "npm run db:setup && npm run dev"
 
 volumes:
   pgdata:
