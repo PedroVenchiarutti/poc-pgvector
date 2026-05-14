@@ -43,3 +43,10 @@ export async function createIdea(title: string, description: string): Promise<Id
   const data = await res.json();
   return data.idea;
 }
+
+export async function fetchSimilarIdeas(ideaId: string, limit = 10): Promise<IdeaSearchResult[]> {
+  const res = await fetch(`${API_URL}/ideas/${ideaId}/similar?limit=${limit}`);
+  if (!res.ok) throw new Error("Erro ao buscar ideias similares");
+  const data = await res.json();
+  return data.results;
+}

@@ -1,4 +1,9 @@
-import { createIdea, listIdeas, searchIdeasByEmbedding } from "../models/idea.model.js";
+import {
+  createIdea,
+  findSimilarToIdea,
+  listIdeas,
+  searchIdeasByEmbedding,
+} from "../models/idea.model.js";
 import { generateEmbedding } from "../services/embedding.service.js";
 import { toIdeaDTO, toIdeaSearchDTO, type IdeaDTO, type IdeaSearchDTO } from "../views/idea.view.js";
 
@@ -21,4 +26,9 @@ export async function createNewIdea(title: string, description: string): Promise
   const embedding = await generateEmbedding(text);
   const row = await createIdea(title, description, embedding);
   return toIdeaDTO(row);
+}
+
+export async function getSimilarIdeas(ideaId: string, limit = 10): Promise<IdeaSearchDTO[]> {
+  const rows = await findSimilarToIdea(ideaId, limit);
+  return rows.map(toIdeaSearchDTO);
 }

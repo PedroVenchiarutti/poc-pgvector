@@ -12,31 +12,44 @@ export type IdeaSearchRow = IdeaRow & {
   similarity: number;
 };
 
+// CREATE — Prisma client extension (typed, sem raw)
 export async function createIdea(
   title: string,
   description: string,
   embedding: number[]
 ): Promise<IdeaRow> {
-  const vector = toVectorLiteral(embedding);
-  const rows = await prisma.$queryRawUnsafe<IdeaRow[]>(
-    `INSERT INTO ideas (id, title, description, embedding, "createdAt")
-     VALUES (gen_random_uuid(), $1, $2, $3::vector, NOW())
-     RETURNING id, title, description, "createdAt"`,
-    title,
-    description,
-    vector
-  );
-  return rows[0];
+  const idea = await prisma.idea.create({
+    data: {
+      title,
+      description,
+      embedding,
+    },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      createdAt: true,
+    },
+  });
+  return idea as IdeaRow;
 }
 
+// READ list — Prisma direto, ignora coluna embedding automaticamente
 export async function listIdeas(): Promise<IdeaRow[]> {
-  return prisma.$queryRawUnsafe<IdeaRow[]>(
-    `SELECT id, title, description, "createdAt"
-     FROM ideas
-     ORDER BY "createdAt" DESC`
-  );
+  return prisma.idea.findMany({
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      createdAt: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
 }
 
+// SEARCH por embedding — raw (precisa do score de distancia)
 export async function searchIdeasByEmbedding(
   embedding: number[],
   limit = 10
@@ -54,11 +67,27 @@ export async function searchIdeasByEmbedding(
   );
 }
 
-export async function countIdeas(): Promise<number> {
-  const rows = await prisma.$queryRawUnsafe<{ count: bigint }[]>(
-    `SELECT COUNT(*)::bigint AS count FROM ideas`
+// SIMILAR — raw (idem motivo: score)
+export async function findSimilarToIdea(
+  ideaId: string,
+  limit = 10
+): Promise<IdeaSearchRow[]> {
+  return prisma.$queryRawUnsafe<IdeaSearchRow[]>(
+    `SELECT id, title, description, "createdAt",
+            1 - (embedding <=> (SELECT embedding FROM ideas WHERE id = $1)) AS similarity
+     FROM ideas
+     WHERE id != $1
+       AND embedding IS NOT NULL
+       AND (SELECT embedding FROM ideas WHERE id = $1) IS NOT NULL
+     ORDER BY embedding <=> (SELECT embedding FROM ideas WHERE id = $1)
+     LIMIT $2`,
+    ideaId,
+    limit
   );
-  return Number(rows[0]?.count ?? 0);
+}
+
+export async function countIdeas(): Promise<number> {
+  return prisma.idea.count();
 }
 
 export async function truncateIdeas(): Promise<void> {

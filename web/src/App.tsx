@@ -2,12 +2,15 @@ import { useState } from "react";
 import { SearchInput } from "./components/SearchInput";
 import { IdeaList } from "./components/IdeaList";
 import { CreateIdeaModal } from "./components/CreateIdeaModal";
+import { SimilarIdeasModal } from "./components/SimilarIdeasModal";
 import { useSearch } from "./hooks/useSearch";
 import { useIdeas } from "./hooks/useIdeas";
+import type { Idea } from "./lib/api";
 
 export default function App() {
   const [query, setQuery] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
+  const [similarTarget, setSimilarTarget] = useState<Idea | null>(null);
   const { results, loading: searching, error: searchError } = useSearch(query);
   const { ideas, loading: loadingAll, error: loadError, refresh } = useIdeas();
 
@@ -42,7 +45,11 @@ export default function App() {
               Resultados {searching && "(buscando...)"}
             </h2>
             {searchError && <p className="text-sm text-red-600 mb-3">{searchError}</p>}
-            <IdeaList ideas={results} empty="Nenhuma ideia similar." />
+            <IdeaList
+              ideas={results}
+              empty="Nenhuma ideia similar."
+              onShowSimilar={setSimilarTarget}
+            />
           </section>
         ) : (
           <section>
@@ -50,7 +57,7 @@ export default function App() {
               Todas as ideias {loadingAll && "(carregando...)"}
             </h2>
             {loadError && <p className="text-sm text-red-600 mb-3">{loadError}</p>}
-            <IdeaList ideas={ideas} />
+            <IdeaList ideas={ideas} onShowSimilar={setSimilarTarget} />
           </section>
         )}
       </div>
@@ -60,6 +67,8 @@ export default function App() {
         onClose={() => setModalOpen(false)}
         onCreated={refresh}
       />
+
+      <SimilarIdeasModal idea={similarTarget} onClose={() => setSimilarTarget(null)} />
     </div>
   );
 }

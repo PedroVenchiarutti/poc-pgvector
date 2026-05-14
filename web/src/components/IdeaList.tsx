@@ -4,9 +4,10 @@ import { IdeaCard } from "./IdeaCard";
 type Props = {
   ideas: (Idea | IdeaSearchResult)[];
   empty?: string;
+  onShowSimilar?: (idea: Idea) => void;
 };
 
-export function IdeaList({ ideas, empty }: Props) {
+export function IdeaList({ ideas, empty, onShowSimilar }: Props) {
   if (ideas.length === 0) {
     return (
       <p className="text-sm text-slate-500 italic">{empty ?? "Nenhuma ideia encontrada."}</p>
@@ -16,7 +17,7 @@ export function IdeaList({ ideas, empty }: Props) {
   return (
     <div className="grid gap-3">
       {ideas.map((idea) => (
-        <IdeaCard key={idea.id} idea={idea} />
+        <IdeaCard key={idea.id} idea={idea} onShowSimilar={onShowSimilar} />
       ))}
     </div>
   );

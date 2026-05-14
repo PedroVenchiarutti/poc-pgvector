@@ -1,5 +1,10 @@
 import type { FastifyInstance } from "fastify";
-import { createNewIdea, getAllIdeas, searchIdeas } from "../controllers/idea.controller.js";
+import {
+  createNewIdea,
+  getAllIdeas,
+  getSimilarIdeas,
+  searchIdeas,
+} from "../controllers/idea.controller.js";
 
 export async function ideaRoutes(app: FastifyInstance) {
   app.get("/ideas", async () => {
@@ -18,6 +23,19 @@ export async function ideaRoutes(app: FastifyInstance) {
     const idea = await createNewIdea(title.trim(), description.trim());
     return reply.code(201).send({ idea });
   });
+
+  app.get<{ Params: { id: string }; Querystring: { limit?: string } }>(
+    "/ideas/:id/similar",
+    async (req, reply) => {
+      const { id } = req.params;
+      const limit = req.query.limit ? Number(req.query.limit) : 10;
+      if (!id) {
+        return reply.code(400).send({ error: "id is required" });
+      }
+      const results = await getSimilarIdeas(id, limit);
+      return { ideaId: id, results };
+    }
+  );
 
   app.post<{ Body: { query: string; limit?: number } }>("/search", async (req, reply) => {
     const { query, limit } = req.body ?? { query: "" };

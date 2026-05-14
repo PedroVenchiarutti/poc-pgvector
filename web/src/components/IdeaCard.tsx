@@ -2,6 +2,7 @@ import type { Idea, IdeaSearchResult } from "../lib/api";
 
 type Props = {
   idea: Idea | IdeaSearchResult;
+  onShowSimilar?: (idea: Idea) => void;
 };
 
 function isSearchResult(idea: Idea | IdeaSearchResult): idea is IdeaSearchResult {
@@ -14,7 +15,7 @@ function similarityColor(percent: number): string {
   return "bg-slate-100 text-slate-700 border-slate-300";
 }
 
-export function IdeaCard({ idea }: Props) {
+export function IdeaCard({ idea, onShowSimilar }: Props) {
   const search = isSearchResult(idea) ? idea : null;
 
   return (
@@ -32,6 +33,18 @@ export function IdeaCard({ idea }: Props) {
         )}
       </div>
       <p className="text-sm text-slate-600 leading-relaxed">{idea.description}</p>
+
+      {onShowSimilar && (
+        <div className="mt-3 pt-3 border-t border-slate-100">
+          <button
+            type="button"
+            onClick={() => onShowSimilar(idea)}
+            className="text-xs font-medium text-indigo-600 hover:text-indigo-800"
+          >
+            Ver ideias similares →
+          </button>
+        </div>
+      )}
     </article>
   );
 }
